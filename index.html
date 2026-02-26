@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS POS — App Blueprint</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --black: #080808;
+    --deep: #0d0d0d;
+    --surface: #141414;
+    --panel: #1a1a1a;
+    --gold: #c9a84c;
+    --gold-bright: #f0c040;
+    --gold-dim: #7a6020;
+    --gold-glow: rgba(201,168,76,0.15);
+    --text: #e8e0cc;
+    --muted: #666;
+    --accent-blue: #3a7bd5;
+    --accent-green: #2ecc71;
+    --accent-red: #e74c3c;
+    --accent-purple: #9b59b6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* PARTICLES */
+  #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+    animation: float-particle linear infinite;
+  }
+
+  @keyframes float-particle {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.1; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+  }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+    background: linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 100%);
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 300;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 50%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .meta-tags {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 1px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .tag-gold { border: 1px solid var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+  .tag-blue { border: 1px solid rgba(58,123,213,0.4); color: #6ba3f0; background: rgba(58,123,213,0.08); }
+  .tag-green { border: 1px solid rgba(46,204,113,0.4); color: #6ddba0; background: rgba(46,204,113,0.08); }
+  .tag-purple { border: 1px solid rgba(155,89,182,0.4); color: #c39bd3; background: rgba(155,89,182,0.08); }
+
+  /* MAIN */
+  main { position: relative; z-index: 5; padding: 40px 20px 80px; max-width: 1400px; margin: 0 auto; }
+
+  /* SECTION */
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-dim), transparent);
+  }
+
+  /* ARCHITECTURE OVERVIEW */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    margin-bottom: 60px;
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+
+  .arch-cell {
+    background: var(--surface);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+
+  .arch-cell:hover { background: var(--panel); }
+
+  .arch-cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: linear-gradient(180deg, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .arch-cell:hover::before { opacity: 1; }
+
+  .arch-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .arch-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .arch-desc {
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+
+  .arch-items {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .arch-item {
+    font-size: 10px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .arch-item::before {
+    content: '▸';
+    color: var(--gold-dim);
+    font-size: 8px;
+  }
+
+  /* FLOW DIAGRAM */
+  .flow-container {
+    margin-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .flow-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+  }
+
+  .flow-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    background: var(--surface);
+    color: var(--muted);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .flow-tab.active {
+    background: var(--panel);
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .flow-tab:hover:not(.active) { color: var(--text); }
+
+  .flow-panel { display: none; }
+  .flow-panel.active { display: block; }
+
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    padding: 32px;
+    border: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+    min-width: 120px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .flow-step:hover { transform: translateY(-3px); }
+
+  .step-bubble {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 1px solid var(--gold-dim);
+    background: var(--gold-glow);
+    margin-bottom: 10px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .flow-step:hover .step-bubble {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px var(--gold-glow);
+  }
+
+  .step-name {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .step-desc {
+    font-size: 9px;
+    color: var(--muted);
+    max-width: 100px;
+    line-height: 1.6;
+  }
+
+  .flow-arrow {
+    color: var(--gold-dim);
+    font-size: 18px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  .flow-branch {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 8px 0;
+  }
+
+  .branch-option {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    border-radius: 1px;
+    background: var(--gold-glow);
+  }
+
+  /* FEATURE MATRIX */
+  .feature-matrix {
+    margin-bottom: 60px;
+  }
+
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(201,168,76,0.2);
+    background: var(--panel);
+  }
+
+  .feature-card.priority-must {
+    border-left: 3px solid var(--gold);
+  }
+
+  .feature-card.priority-v2 {
+    border-left: 3px solid var(--accent-blue);
+  }
+
+  .feature-card.priority-nice {
+    border-left: 3px solid var(--muted);
+  }
+
+  .feature-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .feature-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .priority-badge {
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+
+  .badge-must { background: var(--gold-glow); color: var(--gold); border: 1px solid var(--gold-dim); }
+  .badge-v2 { background: rgba(58,123,213,0.1); color: #6ba3f0; border: 1px solid rgba(58,123,213,0.3); }
+  .badge-nice { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+
+  .feature-desc {
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .feature-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .check-item {
+    font-size: 10px;
+    color: #777;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .check-item span:first-child {
+    color: var(--gold-dim);
+    font-size: 8px;
+  }
+
+  /* TECH STACK */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2px;
+    margin-bottom: 60px;
+  }
+
+  .stack-card {
+    background: var(--surface);
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .stack-card:hover {
+    background: var(--panel);
+    border-color: rgba(201,168,76,0.2);
+  }
+
+  .stack-icon { font-size: 28px; margin-bottom: 10px; }
+
+  .stack-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .stack-role { font-size: 10px; color: var(--muted); line-height: 1.6; }
+
+  /* PAYMENT GATEWAYS */
+  .gateway-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2px;
+    margin-bottom: 60px;
+  }
+
+  .gateway-card {
+    background: var(--surface);
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all 0.3s;
+  }
+
+  .gateway-card:hover { background: var(--panel); }
+
+  .gateway-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .gateway-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+
+  .gateway-region {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 3px 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .gateway-type {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .gateway-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .gateway-field {
+    font-size: 9px;
+    font-family: 'DM Mono', monospace;
+    color: #555;
+    background: rgba(255,255,255,0.03);
+    padding: 4px 8px;
+    border-left: 2px solid var(--gold-dim);
+  }
+
+  /* WHITE LABEL SECTION */
+  .wl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-bottom: 60px;
+  }
+
+  @media (max-width: 600px) { .wl-grid { grid-template-columns: 1fr; } }
+
+  .wl-card {
+    background: var(--surface);
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .wl-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .wl-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .wl-item {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .wl-item::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    color: var(--gold-dim);
+    font-size: 7px;
+    top: 3px;
+  }
+
+  /* SCREEN MOCKUPS */
+  .mockups-row {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    margin-bottom: 60px;
+  }
+
+  .mockup {
+    flex-shrink: 0;
+    width: 220px;
+    border: 1px solid rgba(201,168,76,0.2);
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .mockup:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px var(--gold-glow);
+  }
+
+  .mockup-bar {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mockup-title { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--black); }
+
+  .mockup-dots { display: flex; gap: 4px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.3); }
+
+  .mockup-body { padding: 16px; }
+
+  .mock-row {
+    background: rgba(255,255,255,0.03);
+    height: 8px;
+    border-radius: 1px;
+    margin-bottom: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mock-row.gold { background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); height: 32px; border-radius: 2px; display: flex; align-items: center; padding: 0 8px; }
+  .mock-row.input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); height: 28px; border-radius: 2px; }
+  .mock-row.btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); height: 36px; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+
+  .mock-text { font-size: 8px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
+  .mock-btn-text { font-size: 8px; color: var(--black); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .mock-label { font-size: 7px; color: var(--muted); margin-bottom: 3px; }
+  .mock-spacer { height: 10px; }
+
+  /* SHIMMER ANIMATION */
+  .mock-row::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.05), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
+  /* NEXT STEPS */
+  .next-steps {
+    background: linear-gradient(135deg, rgba(201,168,76,0.05) 0%, rgba(0,0,0,0) 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .next-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .next-desc { font-size: 11px; color: var(--muted); margin-bottom: 28px; line-height: 1.8; }
+
+  .next-phases {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2px;
+    text-align: left;
+  }
+
+  .phase {
+    background: var(--surface);
+    padding: 20px;
+  }
+
+  .phase-num {
+    font-size: 32px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--gold-dim);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .phase-items { font-size: 10px; color: var(--muted); line-height: 1.8; }
+
+  /* GLOW PULSE */
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 10px var(--gold-glow); }
+    50% { box-shadow: 0 0 30px rgba(201,168,76,0.3); }
+  }
+
+  .glow { animation: glow-pulse 3s ease-in-out infinite; }
+
+  /* SCROLL REVEAL */
+  .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .flow-steps { padding: 16px; }
+    .flow-step { min-width: 90px; padding: 10px; }
+    .step-bubble { width: 44px; height: 44px; font-size: 16px; }
+    .mockups-row { gap: 10px; }
+    .mockup { width: 180px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<header>
+  <div class="logo-badge">⬡ Blueprint Document · v1.0</div>
+  <h1>NEXUS <span>POS</span></h1>
+  <p class="subtitle">White-Label Mobile Point of Sale — Full Architecture Blueprint</p>
+  <div class="meta-tags">
+    <span class="tag tag-gold">Web App (PWA-ready)</span>
+    <span class="tag tag-blue">Firebase Backend</span>
+    <span class="tag tag-green">Multi-Gateway</span>
+    <span class="tag tag-purple">White-Label Ready</span>
+    <span class="tag tag-gold">VAT Compliant</span>
+    <span class="tag tag-blue">Multi-Tenant</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══ ARCHITECTURE OVERVIEW ══ -->
+  <div class="section-label reveal">01 — System Architecture</div>
+  <div class="arch-grid reveal">
+    <div class="arch-cell">
+      <span class="arch-icon">🏪</span>
+      <div class="arch-title">Tenant Layer</div>
+      <p class="arch-desc">Each white-label client is a unique tenant with isolated data, branding, and gateway config.</p>
+      <div class="arch-items">
+        <div class="arch-item">Custom domain / subdomain</div>
+        <div class="arch-item">Business logo + colour theme</div>
+        <div class="arch-item">Own API gateway keys</div>
+        <div class="arch-item">Isolated Firestore partition</div>
+        <div class="arch-item">Custom T&C text</div>
+      </div>
+    </div>
+    <div class="arch-cell">
+      <span class="arch-icon">🔐</span>
+      <div class="arch-title">Auth Layer</div>
+      <p class="arch-desc">Firebase Authentication with role-based access control per tenant.</p>
+      <div class="arch-items">
+        <div class="arch-item">Owner / Admin role</div>
+        <div class="arch-item">Cashier / Staff role</div>
+        <div class="arch-item">Read-only / Viewer role</div>
+        <div class="arch-item">Email + Google sign-in</div>
+        <div class="arch-item">Session management</div>
+      </div>
+    </div>
+    <div class="arch-cell">
+      <span class="arch-icon">🗄️</span>
+      <div class="arch-title">Data Layer</div>
+      <p class="arch-desc">Firestore real-time database, structured per tenant for instant sync across devices.</p>
+      <div class="arch-items">
+        <div class="arch-item">Clients collection</div>
+        <div class="arch-item">Inventory collection</div>
+        <div class="arch-item">Transactions collection</div>
+        <div class="arch-item">Quotes / Invoices collection</div>
+        <div class="arch-item">Settings / gateway configs</div>
+      </div>
+    </div>
+    <div class="arch-cell">
+      <span class="arch-icon">💳</span>
+      <div class="arch-title">Payment Layer</div>
+      <p class="arch-desc">Pluggable gateway system — tenant activates the gateways they need.</p>
+      <div class="arch-items">
+        <div class="arch-item">Yoco (link-based, default)</div>
+        <div class="arch-item">Stripe (link-based)</div>
+        <div class="arch-item">M-Pesa (STK push / USSD)</div>
+        <div class="arch-item">Standard Bank</div>
+        <div class="arch-item">Webhook status tracker</div>
+      </div>
+    </div>
+    <div class="arch-cell">
+      <span class="arch-icon">📲</span>
+      <div class="arch-title">Delivery Layer</div>
+      <p class="arch-desc">How the payment link or invoice reaches the customer.</p>
+      <div class="arch-items">
+        <div class="arch-item">WhatsApp (wa.me deep link)</div>
+        <div class="arch-item">SMS (Twilio / Africa's Talking)</div>
+        <div class="arch-item">Email (SendGrid / Firebase)</div>
+        <div class="arch-item">QR Code (in-person display)</div>
+        <div class="arch-item">Copy link fallback</div>
+      </div>
+    </div>
+    <div class="arch-cell">
+      <span class="arch-icon">📊</span>
+      <div class="arch-title">Reporting Layer</div>
+      <p class="arch-desc">Real-time dashboards and exportable reports for business owners.</p>
+      <div class="arch-items">
+        <div class="arch-item">Daily / weekly / monthly revenue</div>
+        <div class="arch-item">Transaction status overview</div>
+        <div class="arch-item">PDF invoice + quote export</div>
+        <div class="arch-item">VAT report export</div>
+        <div class="arch-item">Low stock alerts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN FLOWS ══ -->
+  <div class="section-label reveal">02 — Screen Flows</div>
+  <div class="flow-container reveal">
+    <div class="flow-tabs">
+      <button class="flow-tab active" onclick="showFlow('quick')">Quick Sale</button>
+      <button class="flow-tab" onclick="showFlow('client')">Client Sale</button>
+      <button class="flow-tab" onclick="showFlow('inventory')">Inventory Mgmt</button>
+      <button class="flow-tab" onclick="showFlow('settings')">Gateway Settings</button>
+      <button class="flow-tab" onclick="showFlow('dashboard')">Dashboard</button>
+    </div>
+
+    <!-- QUICK SALE -->
+    <div class="flow-panel active" id="flow-quick">
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-bubble">🏠</div><div class="step-name">Home</div><div class="step-desc">Main menu screen</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">⚡</div><div class="step-name">Quick Sale</div><div class="step-desc">Tap Quick Sale button</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">💰</div><div class="step-name">Enter Amount</div><div class="step-desc">Number pad + description</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🎛️</div><div class="step-name">Select Gateway</div><div class="step-desc">Yoco / Stripe / etc.</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📤</div><div class="step-name">Send Method</div><div class="step-desc">WhatsApp / SMS / Email / QR</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">✅</div><div class="step-name">T&C Checkbox</div><div class="step-desc">Client accepts terms</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">✍️</div><div class="step-name">Signature Pad</div><div class="step-desc">Draw / clear / confirm</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🚀</div><div class="step-name">Send</div><div class="step-desc">Animated send + confirm</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">⏳</div><div class="step-name">Pending</div><div class="step-desc">Live payment status</div></div>
+      </div>
+    </div>
+
+    <!-- CLIENT SALE -->
+    <div class="flow-panel" id="flow-client">
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-bubble">👤</div><div class="step-name">Select Client</div><div class="step-desc">Dropdown or search, or add new</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📋</div><div class="step-name">Build Order</div><div class="step-desc">Add inventory items or open items</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🔢</div><div class="step-name">Quantities</div><div class="step-desc">Set qty per item, auto-calc total</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🏷️</div><div class="step-name">Discounts</div><div class="step-desc">% or flat per item or order</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🧾</div><div class="step-name">VAT Breakdown</div><div class="step-desc">Subtotal + VAT + Total</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📑</div><div class="step-name">Quote or Invoice</div><div class="step-desc">Or proceed to payment link</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">✍️</div><div class="step-name">Signature</div><div class="step-desc">T&Cs + signature pad</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🚀</div><div class="step-name">Send</div><div class="step-desc">Auto-populates client contact</div></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="flow-panel" id="flow-inventory">
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-bubble">📦</div><div class="step-name">Inventory</div><div class="step-desc">Grid or list view of products</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">➕</div><div class="step-name">Add Item</div><div class="step-desc">Name, SKU, price, cost, stock</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🏷️</div><div class="step-name">Category</div><div class="step-desc">Create / assign categories</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📸</div><div class="step-name">Image</div><div class="step-desc">Upload product image</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📊</div><div class="step-name">Stock Level</div><div class="step-desc">Current qty, low stock threshold</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🔔</div><div class="step-name">Alert</div><div class="step-desc">Push alert when stock low</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">💹</div><div class="step-name">Margin</div><div class="step-desc">Cost vs selling price % shown</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="flow-panel" id="flow-settings">
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-bubble">⚙️</div><div class="step-name">Settings</div><div class="step-desc">App + business config</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">💳</div><div class="step-name">Gateways</div><div class="step-desc">Manage payment integrations</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">➕</div><div class="step-name">Add Gateway</div><div class="step-desc">Select provider, enter API keys</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🧪</div><div class="step-name">Test Mode</div><div class="step-desc">Toggle live vs sandbox keys</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">✅</div><div class="step-name">Verify</div><div class="step-desc">Test connection to gateway</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🔑</div><div class="step-name">Active</div><div class="step-desc">Set as default gateway</div></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="flow-panel" id="flow-dashboard">
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-bubble">📈</div><div class="step-name">Revenue</div><div class="step-desc">Today / week / month toggle</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">⏳</div><div class="step-name">Pending</div><div class="step-desc">Unpaid links list + resend</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">✅</div><div class="step-name">Paid</div><div class="step-desc">Confirmed transactions</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">❌</div><div class="step-name">Failed</div><div class="step-desc">Expired / declined</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">📄</div><div class="step-name">Export</div><div class="step-desc">PDF / CSV report</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-bubble">🧾</div><div class="step-name">VAT Report</div><div class="step-desc">SARS-ready breakdown</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN WIREFRAMES ══ -->
+  <div class="section-label reveal">03 — Screen Mockups</div>
+  <div class="mockups-row reveal">
+
+    <!-- HOME -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Home</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div class="mock-label">GOOD MORNING, NEXUS</div>
+        <div class="mock-row gold"><span class="mock-text">R 12,450 Today</span></div>
+        <div class="mock-spacer"></div>
+        <div class="mock-row btn"><span class="mock-btn-text">⚡ Quick Sale</span></div>
+        <div class="mock-spacer"></div>
+        <div class="mock-row btn" style="background: rgba(201,168,76,0.15); border: 1px solid #7a6020;"><span class="mock-btn-text" style="color: #c9a84c;">👤 Client Sale</span></div>
+        <div class="mock-spacer"></div>
+        <div class="mock-label">RECENT TRANSACTIONS</div>
+        <div class="mock-row"></div>
+        <div class="mock-row" style="width: 80%"></div>
+        <div class="mock-row" style="width: 60%"></div>
+      </div>
+    </div>
+
+    <!-- QUICK SALE -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Quick Sale</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div class="mock-label">AMOUNT</div>
+        <div class="mock-row gold" style="height: 48px; justify-content: center;"><span class="mock-text" style="font-size: 14px;">R 0.00</span></div>
+        <div class="mock-spacer"></div>
+        <div class="mock-label">SEND VIA</div>
+        <div style="display:flex; gap:4px; margin-bottom: 8px;">
+          <div style="flex:1; height: 28px; background: rgba(201,168,76,0.15); border: 1px solid #c9a84c; display:flex; align-items:center; justify-content:center;"><span style="font-size:8px; color:#c9a84c; letter-spacing:1px;">WA</span></div>
+          <div style="flex:1; height: 28px; background: rgba(255,255,255,0.03); border: 1px solid #222; display:flex; align-items:center; justify-content:center;"><span style="font-size:8px; color:#555; letter-spacing:1px;">SMS</span></div>
+          <div style="flex:1; height: 28px; background: rgba(255,255,255,0.03); border: 1px solid #222; display:flex; align-items:center; justify-content:center;"><span style="font-size:8px; color:#555; letter-spacing:1px;">EMAIL</span></div>
+        </div>
+        <div class="mock-row input"></div>
+        <div class="mock-spacer"></div>
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;"><div style="width:10px;height:10px;border:1px solid #c9a84c;border-radius:2px;"></div><span style="font-size:8px; color:#555;">I accept the T&amp;Cs</span></div>
+        <div class="mock-row btn"><span class="mock-btn-text">Send Payment Link</span></div>
+      </div>
+    </div>
+
+    <!-- CLIENT SALE -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Client Sale</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div class="mock-label">CLIENT</div>
+        <div class="mock-row input" style="display:flex; align-items:center; padding:0 8px;"><span style="font-size:8px; color:#555;">Select Client ▾</span></div>
+        <div class="mock-spacer"></div>
+        <div class="mock-label">ORDER ITEMS</div>
+        <div class="mock-row" style="height:20px; background: rgba(255,255,255,0.03); border:1px solid #1f1f1f; margin-bottom:3px;"></div>
+        <div class="mock-row" style="height:20px; background: rgba(255,255,255,0.03); border:1px solid #1f1f1f; margin-bottom:3px;"></div>
+        <div style="text-align:right; margin-bottom:4px;"><span style="font-size:9px; color:#c9a84c;">+ Add Item</span></div>
+        <div class="mock-spacer"></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="font-size:9px; color:#555;">Subtotal</span><span style="font-size:9px; color:#999;">R 0.00</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="font-size:9px; color:#555;">VAT (15%)</span><span style="font-size:9px; color:#999;">R 0.00</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-size:9px; color:#c9a84c; font-weight:bold;">TOTAL</span><span style="font-size:9px; color:#c9a84c; font-weight:bold;">R 0.00</span></div>
+        <div class="mock-row btn"><span class="mock-btn-text">Proceed →</span></div>
+      </div>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Signature</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div class="mock-label">DIGITAL SIGNATURE</div>
+        <div style="height:100px; border: 1px dashed #333; border-radius:2px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; background: rgba(255,255,255,0.02);">
+          <span style="font-size:9px; color:#333; letter-spacing:1px;">SIGN HERE</span>
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <div style="flex:1; height:28px; background: rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); display:flex; align-items:center; justify-content:center;"><span style="font-size:8px; color:#e74c3c;">✕ CLEAR</span></div>
+          <div style="flex:1; height:28px; background: rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); display:flex; align-items:center; justify-content:center;"><span style="font-size:8px; color:#2ecc71;">✓ CONFIRM</span></div>
+        </div>
+        <div class="mock-row btn"><span class="mock-btn-text">🚀 Send Now</span></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Inventory</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <div class="mock-row input" style="flex:1; height:24px; margin:0;"></div>
+          <div style="height:24px; width:32px; background: linear-gradient(135deg, #7a6020, #c9a84c); display:flex; align-items:center; justify-content:center;"><span style="font-size:10px; color:#000;">+</span></div>
+        </div>
+        <div class="mock-label">ITEMS (12)</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <div style="background: rgba(255,255,255,0.03); border:1px solid #1f1f1f; padding:8px; border-radius:2px;">
+            <div style="width:100%; height:30px; background:#1f1f1f; margin-bottom:5px; border-radius:1px;"></div>
+            <div style="height:6px; background:#2a2a2a; width:70%; margin-bottom:3px;"></div>
+            <div style="height:6px; background: rgba(201,168,76,0.3); width:50%;"></div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border:1px solid #1f1f1f; padding:8px; border-radius:2px;">
+            <div style="width:100%; height:30px; background:#1f1f1f; margin-bottom:5px; border-radius:1px;"></div>
+            <div style="height:6px; background:#2a2a2a; width:70%; margin-bottom:3px;"></div>
+            <div style="height:6px; background: rgba(201,168,76,0.3); width:50%;"></div>
+          </div>
+          <div style="background: rgba(231,76,60,0.05); border:1px solid rgba(231,76,60,0.2); padding:8px; border-radius:2px;">
+            <div style="width:100%; height:30px; background:#1f1f1f; margin-bottom:5px; border-radius:1px;"></div>
+            <div style="height:6px; background:#2a2a2a; width:70%; margin-bottom:3px;"></div>
+            <div style="height:6px; background: rgba(231,76,60,0.4); width:30%;"><span style="font-size:7px; color:#e74c3c; white-space:nowrap;">LOW</span></div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border:1px solid #1f1f1f; padding:8px; border-radius:2px;">
+            <div style="width:100%; height:30px; background:#1f1f1f; margin-bottom:5px; border-radius:1px;"></div>
+            <div style="height:6px; background:#2a2a2a; width:70%; margin-bottom:3px;"></div>
+            <div style="height:6px; background: rgba(201,168,76,0.3); width:50%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="mockup">
+      <div class="mockup-bar"><div class="mockup-title">Dashboard</div><div class="mockup-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="mockup-body">
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <div style="flex:1; background: rgba(201,168,76,0.08); border:1px solid #7a6020; padding:6px; text-align:center;">
+            <div style="font-size:7px; color:#7a6020; letter-spacing:1px; margin-bottom:3px;">PAID</div>
+            <div style="font-size:10px; color:#c9a84c;">R 8,200</div>
+          </div>
+          <div style="flex:1; background: rgba(58,123,213,0.08); border:1px solid rgba(58,123,213,0.3); padding:6px; text-align:center;">
+            <div style="font-size:7px; color:#3a7bd5; letter-spacing:1px; margin-bottom:3px;">PENDING</div>
+            <div style="font-size:10px; color:#6ba3f0;">R 4,250</div>
+          </div>
+          <div style="flex:1; background: rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); padding:6px; text-align:center;">
+            <div style="font-size:7px; color:#e74c3c; letter-spacing:1px; margin-bottom:3px;">FAILED</div>
+            <div style="font-size:10px; color:#e74c3c;">R 500</div>
+          </div>
+        </div>
+        <div class="mock-label">RECENT</div>
+        <div style="margin-bottom:3px; display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1f1f1f;">
+          <span style="font-size:8px; color:#999;">Client A</span>
+          <span style="font-size:8px; color:#2ecc71;">✓ R 1,200</span>
+        </div>
+        <div style="margin-bottom:3px; display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1f1f1f;">
+          <span style="font-size:8px; color:#999;">Client B</span>
+          <span style="font-size:8px; color:#3a7bd5;">⌛ R 850</span>
+        </div>
+        <div style="margin-bottom:8px; display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #1f1f1f;">
+          <span style="font-size:8px; color:#999;">Quick Sale</span>
+          <span style="font-size:8px; color:#2ecc71;">✓ R 350</span>
+        </div>
+        <div class="mock-row btn" style="height:24px;"><span class="mock-btn-text">Export PDF</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ PAYMENT GATEWAYS ══ -->
+  <div class="section-label reveal">04 — Payment Gateways</div>
+  <div class="gateway-grid reveal">
+    <div class="gateway-card">
+      <div class="gateway-header">
+        <div class="gateway-name" style="color: #00b8d9;">Yoco</div>
+        <div class="gateway-region">ZA · Default</div>
+      </div>
+      <div class="gateway-type">Link-based payment. Generates an instant payment URL sent to client.</div>
+      <div class="gateway-fields">
+        <div class="gateway-field">pk_live_XXXX</div>
+        <div class="gateway-field">sk_live_XXXX</div>
+        <div class="gateway-field">Instant Link URL</div>
+        <div class="gateway-field">Webhook Secret</div>
+      </div>
+    </div>
+    <div class="gateway-card">
+      <div class="gateway-header">
+        <div class="gateway-name" style="color: #635bff;">Stripe</div>
+        <div class="gateway-region">Global</div>
+      </div>
+      <div class="gateway-type">Payment Intent + hosted checkout link. Supports most currencies.</div>
+      <div class="gateway-fields">
+        <div class="gateway-field">pk_live_XXXX</div>
+        <div class="gateway-field">sk_live_XXXX</div>
+        <div class="gateway-field">Webhook Endpoint Secret</div>
+      </div>
+    </div>
+    <div class="gateway-card">
+      <div class="gateway-header">
+        <div class="gateway-name" style="color: #00a651;">M-Pesa</div>
+        <div class="gateway-region">KE · TZ · UG</div>
+      </div>
+      <div class="gateway-type">STK Push — customer receives prompt on phone. Different flow from link-based. Amount + phone → push.</div>
+      <div class="gateway-fields">
+        <div class="gateway-field">Consumer Key</div>
+        <div class="gateway-field">Consumer Secret</div>
+        <div class="gateway-field">Shortcode / Paybill</div>
+        <div class="gateway-field">Lipa Na Mpesa Passkey</div>
+      </div>
+    </div>
+    <div class="gateway-card">
+      <div class="gateway-header">
+        <div class="gateway-name" style="color: #0033a0;">Standard Bank</div>
+        <div class="gateway-region">ZA · Africa</div>
+      </div>
+      <div class="gateway-type">⚠️ Requires clarification: InstantMoney, Merchant API, or PayGate integration?</div>
+      <div class="gateway-fields">
+        <div class="gateway-field">API Key / Client ID</div>
+        <div class="gateway-field">Client Secret</div>
+        <div class="gateway-field">Merchant ID</div>
+      </div>
+    </div>
+    <div class="gateway-card" style="border: 1px dashed rgba(255,255,255,0.1); opacity: 0.6;">
+      <div class="gateway-header">
+        <div class="gateway-name" style="color: #666;">+ Custom</div>
+        <div class="gateway-region">Any</div>
+      </div>
+      <div class="gateway-type">Add any gateway with a custom REST endpoint. Admin configures headers, body template, and link field path.</div>
+      <div class="gateway-fields">
+        <div class="gateway-field">Endpoint URL</div>
+        <div class="gateway-field">Auth Header</div>
+        <div class="gateway-field">Request Body Template (JSON)</div>
+        <div class="gateway-field">Link Response Path</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FEATURE MATRIX ══ -->
+  <div class="section-label reveal">05 — Feature Matrix</div>
+  <div class="feature-matrix reveal">
+    <div class="matrix-grid">
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">Quick Sale</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">Amount entry, gateway select, send via WhatsApp/SMS/Email/QR, T&Cs, signature pad, animated send.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Gold number pad with large display</div>
+          <div class="check-item"><span>◆</span> Gateway selector with logos</div>
+          <div class="check-item"><span>◆</span> Channel toggle with animation</div>
+          <div class="check-item"><span>◆</span> Canvas signature pad</div>
+          <div class="check-item"><span>◆</span> Particle send animation</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">Client Sale</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">Full client-linked sale with inventory, auto-populate contact info, order building.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Searchable client dropdown</div>
+          <div class="check-item"><span>◆</span> Add / edit client inline</div>
+          <div class="check-item"><span>◆</span> Inventory item picker</div>
+          <div class="check-item"><span>◆</span> Open item fallback</div>
+          <div class="check-item"><span>◆</span> Auto-populate number/email</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">VAT Handling</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">15% VAT (configurable per tenant), inclusive/exclusive toggle, SARS-ready breakdown on all documents.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Per-tenant VAT rate config</div>
+          <div class="check-item"><span>◆</span> Inc / excl toggle per sale</div>
+          <div class="check-item"><span>◆</span> VAT number on invoices</div>
+          <div class="check-item"><span>◆</span> Monthly VAT report export</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">Inventory Mgmt</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">Full product catalogue with categories, images, stock levels, cost vs sell price.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Create / edit / delete items</div>
+          <div class="check-item"><span>◆</span> Category management</div>
+          <div class="check-item"><span>◆</span> Product image upload</div>
+          <div class="check-item"><span>◆</span> Stock qty + low alert</div>
+          <div class="check-item"><span>◆</span> Profit margin display</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">Transaction History</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">Live-updating log of all transactions with payment status, client, amount, gateway.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Pending / Paid / Failed / Expired</div>
+          <div class="check-item"><span>◆</span> Webhook status updates</div>
+          <div class="check-item"><span>◆</span> Resend link from history</div>
+          <div class="check-item"><span>◆</span> Filter by date / status / client</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-must">
+        <div class="feature-header"><div class="feature-name">PDF Invoices & Quotes</div><span class="priority-badge badge-must">V1 Must</span></div>
+        <p class="feature-desc">Branded PDF generation — tenant logo, colours, invoice number, VAT breakdown, signature.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Auto invoice numbering</div>
+          <div class="check-item"><span>◆</span> Quote → Invoice conversion</div>
+          <div class="check-item"><span>◆</span> Signature embed in PDF</div>
+          <div class="check-item"><span>◆</span> Send PDF via email / WA</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-v2">
+        <div class="feature-header"><div class="feature-name">White-Label Config</div><span class="priority-badge badge-v2">V1 Core</span></div>
+        <p class="feature-desc">Per-tenant branding: logo, colours, business name, T&C text, VAT number, invoice footer.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Logo upload</div>
+          <div class="check-item"><span>◆</span> Primary colour picker</div>
+          <div class="check-item"><span>◆</span> Custom T&C text editor</div>
+          <div class="check-item"><span>◆</span> Invoice header/footer config</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-v2">
+        <div class="feature-header"><div class="feature-name">Dashboard</div><span class="priority-badge badge-v2">V1 Core</span></div>
+        <p class="feature-desc">Revenue overview, pending payments, quick actions, low stock alerts, staff activity.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> Revenue chart (day/week/month)</div>
+          <div class="check-item"><span>◆</span> Top selling items</div>
+          <div class="check-item"><span>◆</span> Top clients by value</div>
+          <div class="check-item"><span>◆</span> Quick action shortcuts</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-v2">
+        <div class="feature-header"><div class="feature-name">Discounts</div><span class="priority-badge badge-v2">V1 Core</span></div>
+        <p class="feature-desc">Per-item % or flat discount, or order-level discount. Discount reason logged for reporting.</p>
+        <div class="feature-checklist">
+          <div class="check-item"><span>◆</span> % or flat per item</div>
+          <div class="check-item"><span>◆</span> Order-level discount</div>
+          <div class="check-item"><span>◆</span> Discount reason field</div>
+        </div>
+      </div>
+
+      <div class="feature-card priority-nice">
+        <div class="feature-header"><div class="feature-name">Delivery Tracking</div><span class="priority-badge badge-nice">V2</span></div>
+        <p class="feature-desc">For clients with an address — mark orders as Pending → Dispatched → Delivered. Basic status tracker.</p>
+      </div>
+
+      <div class="feature-card priority-nice">
+        <div class="feature-header"><div class="feature-name">Multi-Staff Roles</div><span class="priority-badge badge-nice">V2</span></div>
+        <p class="feature-desc">Admin vs Cashier role with scoped permissions. Staff can't see settings or reports unless granted access.</p>
+      </div>
+
+      <div class="feature-card priority-nice">
+        <div class="feature-header"><div class="feature-name">Offline Mode</div><span class="priority-badge badge-nice">V2</span></div>
+        <p class="feature-desc">Draft a sale when offline, queue it, auto-sync and send link when connection returns.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ WHITE LABEL SPECIFICS ══ -->
+  <div class="section-label reveal">06 — White-Label Architecture</div>
+  <div class="wl-grid reveal">
+    <div class="wl-card">
+      <div class="wl-title">What Each Tenant Gets</div>
+      <div class="wl-list">
+        <div class="wl-item">Their own login credentials and isolated data</div>
+        <div class="wl-item">Business logo + primary brand colour applied throughout the UI</div>
+        <div class="wl-item">Custom T&C text shown on every sale</div>
+        <div class="wl-item">Their own payment gateway API keys (you never touch their money)</div>
+        <div class="wl-item">Custom invoice header with business name, address, VAT number</div>
+        <div class="wl-item">Subdomain option: <em>theirbusiness.yourapp.com</em></div>
+        <div class="wl-item">Their own client + inventory database, private to them</div>
+      </div>
+    </div>
+    <div class="wl-card">
+      <div class="wl-title">What You (Super Admin) Get</div>
+      <div class="wl-list">
+        <div class="wl-item">Super admin dashboard to create / suspend / manage tenants</div>
+        <div class="wl-item">Subscription / billing layer per tenant (Stripe billing)</div>
+        <div class="wl-item">Usage analytics across all tenants</div>
+        <div class="wl-item">Feature flags — enable/disable features per tenant plan</div>
+        <div class="wl-item">Global gateway defaults you pre-configure for clients</div>
+        <div class="wl-item">Support access (read-only tenant view) for troubleshooting</div>
+        <div class="wl-item">Onboarding flow to spin up a new tenant in &lt; 5 minutes</div>
+      </div>
+    </div>
+    <div class="wl-card">
+      <div class="wl-title">Suggested Pricing Tiers (for your clients)</div>
+      <div class="wl-list">
+        <div class="wl-item"><strong style="color: var(--gold);">Starter:</strong> 1 user, 1 gateway, 50 transactions/mo, basic branding</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Pro:</strong> 3 users, all gateways, unlimited transactions, full branding, PDF invoices</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Business:</strong> 10 users, multi-staff roles, API access, custom domain, priority support</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Enterprise:</strong> Unlimited, white-glove setup, SLA, custom features</div>
+      </div>
+    </div>
+    <div class="wl-card">
+      <div class="wl-title">Key Technical Decisions</div>
+      <div class="wl-list">
+        <div class="wl-item"><strong style="color: var(--gold);">Framework:</strong> React + Vite (PWA-ready, fast, mobile-first)</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Backend:</strong> Firebase (Auth + Firestore + Storage + Functions)</div>
+        <div class="wl-item"><strong style="color: var(--gold);">PDF:</strong> jsPDF or React-PDF for client-side PDF generation</div>
+        <div class="wl-item"><strong style="color: var(--gold);">SMS:</strong> Africa's Talking (best for ZA/KE) or Twilio</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Hosting:</strong> Firebase Hosting or Vercel (CDN edge, global)</div>
+        <div class="wl-item"><strong style="color: var(--gold);">Webhooks:</strong> Firebase Functions to receive gateway callbacks</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TECH STACK ══ -->
+  <div class="section-label reveal">07 — Recommended Tech Stack</div>
+  <div class="stack-grid reveal">
+    <div class="stack-card"><div class="stack-icon">⚛️</div><div class="stack-name">React + Vite</div><div class="stack-role">Fast, mobile-optimised UI framework with PWA support</div></div>
+    <div class="stack-card"><div class="stack-icon">🔥</div><div class="stack-name">Firebase</div><div class="stack-role">Auth, Firestore DB, Storage, Cloud Functions, Hosting</div></div>
+    <div class="stack-card"><div class="stack-icon">🎨</div><div class="stack-name">Tailwind CSS</div><div class="stack-role">Utility-first styling with dark/light theme tokens</div></div>
+    <div class="stack-card"><div class="stack-icon">📄</div><div class="stack-name">jsPDF / React-PDF</div><div class="stack-role">Client-side PDF invoice + quote generation</div></div>
+    <div class="stack-card"><div class="stack-icon">✍️</div><div class="stack-name">react-signature-canvas</div><div class="stack-role">Canvas-based digital signature pad with export</div></div>
+    <div class="stack-card"><div class="stack-icon">📱</div><div class="stack-name">PWA Manifest</div><div class="stack-role">Installable on home screen, offline-capable shell</div></div>
+    <div class="stack-card"><div class="stack-icon">📊</div><div class="stack-name">Recharts</div><div class="stack-role">Revenue charts and dashboard visualisations</div></div>
+    <div class="stack-card"><div class="stack-icon">💬</div><div class="stack-name">Africa's Talking</div><div class="stack-role">SMS delivery for ZA/KE/UG markets</div></div>
+  </div>
+
+  <!-- ══ NEXT STEPS ══ -->
+  <div class="section-label reveal">08 — Build Roadmap</div>
+  <div class="next-steps reveal glow">
+    <div class="next-title">Ready to Build?</div>
+    <p class="next-desc">Confirm the blueprint above and we start coding immediately.<br>Suggested 4-phase build approach:</p>
+    <div class="next-phases">
+      <div class="phase">
+        <div class="phase-num">01</div>
+        <div class="phase-title">Foundation</div>
+        <div class="phase-items">Firebase setup<br>Auth + multi-tenant<br>App shell + routing<br>Dark/light theme<br>White-label config</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">02</div>
+        <div class="phase-title">Core Sales</div>
+        <div class="phase-items">Quick Sale flow<br>Yoco integration<br>Signature pad<br>WhatsApp/SMS/Email<br>Animated send</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">03</div>
+        <div class="phase-title">Client & Stock</div>
+        <div class="phase-items">Client management<br>Inventory system<br>Client Sale flow<br>VAT + discounts<br>PDF invoices</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num">04</div>
+        <div class="phase-title">Dashboard & Gateways</div>
+        <div class="phase-items">Dashboard + charts<br>Transaction history<br>Stripe + M-Pesa<br>Gateway manager<br>Super admin panel</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // PARTICLES
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  function createParticle() {
+    return {
+      x: Math.random() * canvas.width,
+      y: canvas.height + 10,
+      size: Math.random() * 2 + 0.5,
+      speed: Math.random() * 0.8 + 0.3,
+      opacity: 0,
+      maxOpacity: Math.random() * 0.4 + 0.1,
+      fadeIn: true,
+      life: 0,
+      maxLife: Math.random() * 200 + 100,
+    };
+  }
+
+  for (let i = 0; i < 40; i++) {
+    const p = createParticle();
+    p.y = Math.random() * canvas.height;
+    p.life = Math.random() * p.maxLife;
+    particles.push(p);
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach((p, i) => {
+      p.y -= p.speed;
+      p.life++;
+      if (p.life < 30) p.opacity = Math.min(p.maxOpacity, p.opacity + 0.01);
+      if (p.y < -10 || p.life > p.maxLife) particles[i] = createParticle();
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201, 168, 76, ${p.opacity})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+
+  // FLOW TABS
+  function showFlow(id) {
+    document.querySelectorAll('.flow-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.flow-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('flow-' + id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // SCROLL REVEAL
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
